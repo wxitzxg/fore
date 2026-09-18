@@ -1,4 +1,20 @@
-# mattpocock-skills
+# fore
+
+## 0.1.0
+
+Forked from [mattpocock/skills](https://github.com/mattpocock/skills) at upstream 1.2.3, and rebranded as an independent plugin:
+
+- Plugin renamed from `mattpocock-skills` to `fore`, shipped through the `wxitzxg` marketplace (`/plugin marketplace add wxitzxg/fore`, then `/plugin install fore@wxitzxg`).
+- Version lineage restarts at 0.1.0. Versions here are fore versions; the upstream 1.x series continues in the history below.
+- `ask-matt` renamed to `guide`, `setup-matt-pocock-skills` renamed to `setup` (directories, command names, docs pages and every reference in living files).
+- User-facing facade rewritten (README, install block, docs pages): repo-local relative links replace the former aihero.dev publishing setup. Historical records (the upstream changelog below, old changesets, upstream ADRs) are preserved unchanged.
+- Skill bodies and behaviour are unchanged from upstream 1.2.3.
+
+---
+
+# Upstream changelog (mattpocock/skills)
+
+The entries below are the upstream project's changelog, preserved for history. They describe `mattpocock-skills` versions before the fork and are not fore releases.
 
 ## 1.2.3
 

@@ -1,19 +1,20 @@
 {
-  "name": "mattpocock",
+  "name": "wxitzxg",
   "owner": {
-    "name": "Matt Pocock",
-    "url": "https://www.aihero.dev"
+    "name": "wxitzxg"
   },
-  "description": "Matt Pocock's skills for real engineering, as an installable Claude Code plugin.",
+  "description": "fore: spec-driven development skills for coding agents, as an installable Claude Code plugin.",
   "plugins": [
     {
-      "name": "mattpocock-skills",
+      "name": "fore",
       "source": "./",
-      "description": "Matt Pocock's agent skills for real engineering (grilling, spec/ticket flows, TDD, code review, domain modelling and more).",
+      "description": "Spec-driven development skills: interview before building, write the spec, then move fore.",
       "category": "engineering",
       "keywords": [
         "engineering",
         "skills",
+        "sdd",
+        "spec-driven-development",
         "tdd",
         "code-review",
         "grilling"
