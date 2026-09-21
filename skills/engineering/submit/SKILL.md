@@ -93,7 +93,16 @@ Find the linked issues in this fixed order of confidence. Stop at the first leve
 
    > No linked issue was found in the arguments, this session, or the branch name. Give the issue number to close, then run /submit again.
 
-Verify every candidate exists before using it: GitHub `gh issue view <n>`, GitLab `glab issue view <n>`. Drop or correct a reference that does not resolve, and say so.
+Verify every candidate exists before using it:
+
+```bash
+# GitHub (REST works with fine-grained tokens that cannot use GraphQL)
+gh api "repos/<owner>/<repo>/issues/<n>"
+# GitLab
+glab issue view <n>
+```
+
+Drop or correct a reference that does not resolve, and say so.
 
 ## 4. Propose a title
 
@@ -113,8 +122,10 @@ Before any network write, check whether the branch already has an open request:
 GitHub:
 
 ```bash
-gh api "repos/<owner>/<repo>/pulls?head=<owner>:<branch>&state=open" --jq '.[0] | .number, .html_url'
+gh api "repos/<owner>/<repo>/pulls?head=<owner>:<branch>&state=open" --jq 'if length > 0 then .[0].html_url else empty end'
 ```
+
+An empty output means none exists. Do not treat a `null` line from `.[0]` on an empty array as a found request.
 
 GitLab:
 
@@ -126,7 +137,7 @@ If one exists, print its URL and stop. Nothing is pushed and nothing is duplicat
 
 ## 6. Generate the body
 
-Call the Skill tool with `pr` to generate the pull request body from the primary sources (the tickets, the spec, the commits). Then append a closing section at the end of that body. One reference per line so every issue closes:
+Call the Skill tool with "pr" to generate the pull request body from the primary sources (the tickets, the spec, the commits). Then append a closing section at the end of that body. One reference per line so every issue closes:
 
 ```markdown
 ## Closes

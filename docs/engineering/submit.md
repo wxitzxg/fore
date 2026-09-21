@@ -35,6 +35,8 @@ The linked issues are resolved in a fixed order of confidence:
 
 Before any network write you get a confirmation gate: target repository, base branch, proposed title, draft status, and every issue that will close. Every field is editable, and the title always is. The proposed title comes from the ticket (one ticket), the common parent or spec (multiple tickets), or the latest commit subject as a fallback.
 
+Origin is the only target, and the base branch must live inside it; a request naming upstream or another remote is refused even when asked for explicitly. A draft option opens a request that cannot be merged until you promote it on the code host.
+
 ## Common questions
 
 **Why must I run it in the same session, before clearing context?**
@@ -45,10 +47,6 @@ Because issue identity comes from session context. When implement was given a ti
 
 No, and it will not wait on CI at all. It prints the request link and stops immediately. You watch the checks and merge by hand. That moment of human review is the point: auto-merge after green would turn the request into a formality.
 
-**Can I submit against my fork, or against upstream?**
-
-Origin is the only target, and the base branch must live in origin. A request that names `upstream` or another remote is refused even when asked for explicitly. If origin is your fork, the request opens there; to change where work is hosted, change origin first and rerun setup if the tracker changes.
-
 **What happens if the push is rejected?**
 
 Submit stops on a non-fast-forward and tells you to rebase onto or merge `origin/<branch>`, resolve, commit, and rerun. It never force pushes, and there is no hidden flag that makes it force push. A force push on a branch under review can quietly remove commits a reviewer already saw.
@@ -56,10 +54,6 @@ Submit stops on a non-fast-forward and tells you to rebase onto or merge `origin
 **Can the issue it closes be wrong?**
 
 Not silently. Explicit arguments and session context are used as facts; branch-name digits are shown to you for confirmation; and if nothing is found it stops and asks. Verify the issue list in the confirmation gate, since that exact list is what the tracker closes on merge.
-
-**Can I open it as a draft?**
-
-Yes. Say so at the gate and the request is created as a draft that cannot be merged accidentally. Promote it to ready on the code host when you want review.
 
 ## It's working if
 

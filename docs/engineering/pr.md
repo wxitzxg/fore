@@ -23,7 +23,7 @@ Four parts, and the optional pieces are genuinely optional:
 - **Evidence**: a before and after pair. Screenshots first when the change is visual; otherwise the failing test run next to the passing one.
 - **Merge Danger**: a one-way or two-way door call, followed by the blast radius in a word. Hard-to-reverse changes are one-way doors; a cheap rollback makes a change two-way.
 
-The visual guidance is reproduced almost verbatim from the `show-me` skill by Dex Horthy (Humanlayer), aimed at a diff instead of a conversation; the skill carries the credits for it.
+The visual guidance is reproduced almost verbatim from the `show-me` skill, aimed at a diff instead of a conversation; the attribution lives in this skill's CREDITS file.
 
 ## Common questions
 
