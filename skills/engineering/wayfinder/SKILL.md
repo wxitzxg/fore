@@ -72,7 +72,9 @@ Blocking uses the tracker's **native** dependency relationship: essential becaus
 
 The answer isn't part of the body; it's recorded on resolution (see [Work through the map](#work-through-the-map)). Assets created while resolving a ticket are linked from the issue, not pasted in.
 
-**Admission test for every ticket.** Before creating one, finish this sentence: "When this ticket closes, what changes is ____." If the answer is what the team *decides* or *knows*, it belongs on the map. If it is the *codebase*, a feature built, code deleted, a pipeline retired, it is a slice of the destination, not a wayfinder ticket: those are cut by `/to-tickets` and do not exist until `/to-spec` has run. The body gives the same signal: every child opens with `## Question`. If you are writing `## What to build`, acceptance checklists, or test commands, you are authoring an implementation ticket inside the planning map. Stop; that is post-handoff work. Wayfinder children never carry the `ready-for-agent` label; that label marks post-spec implementation tickets.
+**Admission test for every ticket.** Before creating one, finish this sentence: "When this ticket closes, what changes is ____." If the answer is what the team *decides* or *knows*, it belongs as a child ticket of the map. If it is the *codebase*, a feature built, code deleted, a pipeline retired, it is a slice of the destination, not a wayfinder ticket: those are cut by `/to-tickets` and do not exist until `/to-spec` has run. The body gives the same signal: every child opens with `## Question`. If you are writing `## What to build`, acceptance checklists, or test commands, you are authoring an implementation ticket inside the planning map. Stop; that is post-handoff work. Wayfinder children never carry the `ready-for-agent` label; that label marks post-spec implementation tickets.
+
+Throwaway prototype assets and research branches are not changes to the codebase: they are linked from the ticket and never merge into the delivery line. Research branches are kept until the map closes, so later tickets can consult them via the ticket's link.
 
 ## Ticket Types
 
@@ -126,7 +128,7 @@ User invokes with a loose idea.
 3. **Create the map** (label `wayfinder:map`): Destination and Notes filled in, Decisions-so-far empty, the fog sketched into **Not yet specified**.
 4. **Create the tickets you can specify now** as child issues of the map, applying the admission test to each as you create it: decision tickets only, never slices of the destination's build or deletion work. Then wire blocking edges in a **second pass** (issues need ids before they can reference each other). Wiring sorts them into the frontier and the blocked; everything you can't yet specify stays in the fog: the **Not yet specified** section.
 5. **Fire the research subagents.** For each `research` ticket you just created, spin up a subagent that calls the Skill tool with "research" to resolve it in parallel, capturing its findings on a throwaway `research/<name>` branch with a context pointer from the ticket.
-6. Stop: charting is one session's work; it hand-resolves nothing and writes no spec, no implementation tickets, no code. The `/to-spec` handoff waits until decisions are resolved, in a later session.
+6. Stop: charting is one session's work; it hand-resolves nothing and writes no spec, no implementation tickets, no product code. The `/to-spec` handoff waits until decisions are resolved, in a later session.
 
 ### Work through the map
 

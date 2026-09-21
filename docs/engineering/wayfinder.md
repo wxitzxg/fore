@@ -52,7 +52,9 @@ Every ticket carries a `wayfinder:<type>` label, and is either **HITL** (worked 
 
 `task` is the only type that *does* rather than decides, and it earns its place by unblocking a decision, never by delivering a piece of the destination. This is the type that goes wrong most often in practice: agents interpret it as an implementation step and file the destination's own deletions or builds (retire a pipeline, delete a module) as `wayfinder:task`. Those slices belong to [to-tickets](./to-tickets.md), after a spec exists.
 
-Every child passes an **admission test** before creation: complete "when this ticket closes, what changes is ____". What the team *decides or knows* belongs on the map; what changes is the *codebase* (a feature shipped, code deleted, a pipeline retired) does not. The body gives the same signal: every wayfinder child opens with `## Question`. A `## What to build` section, acceptance checklists, or the `ready-for-agent` label mean you are looking at a post-spec implementation ticket, not a decision ticket.
+Every child passes an **admission test** before creation: complete "when this ticket closes, what changes is ____". What the team *decides or knows* belongs as a child ticket of the map; what changes is the *codebase* (a feature shipped, code deleted, a pipeline retired) does not. The body gives the same signal: every wayfinder child opens with `## Question`. A `## What to build` section, acceptance checklists, or the `ready-for-agent` label mean you are looking at a post-spec implementation ticket, not a decision ticket.
+
+Throwaway prototype assets and research branches are not changes to the codebase: they are linked from the ticket and never merge into the delivery line. Research branches are kept until the map closes, so later tickets can consult them via the ticket's link.
 
 Research is the only exception to *one ticket per session*.
 
