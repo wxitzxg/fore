@@ -66,10 +66,10 @@ Resolve the base branch (normally `origin`'s default branch) and confirm it exis
 git ls-remote --heads origin "<base>"
 ```
 
-GitHub default branch:
+Derive `<owner>/<repo>` from the origin URL once and reuse it. GitHub default branch (REST works with fine-grained tokens that cannot use GraphQL):
 
 ```bash
-gh repo view --json defaultBranchRef --jq .defaultBranchRef.name
+gh api "repos/<owner>/<repo>" --jq .default_branch
 ```
 
 GitLab default branch (encode the project path from the origin URL, e.g. `group%2Fproject`):
@@ -113,7 +113,7 @@ Before any network write, check whether the branch already has an open request:
 GitHub:
 
 ```bash
-gh pr list --head "<branch>" --state open --json number,url
+gh api "repos/<owner>/<repo>/pulls?head=<owner>:<branch>&state=open" --jq '.[0] | .number, .html_url'
 ```
 
 GitLab:
