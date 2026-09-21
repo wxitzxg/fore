@@ -20,7 +20,9 @@ Every `SKILL.md` is either user-invoked (`disable-model-invocation: true` plus `
 
 [`guide`](./skills/engineering/guide/SKILL.md) is the router that maps every user-reachable skill and how they relate. The same trigger that re-syncs a docs page applies to it: whenever you add, rename, remove, or change how a user-reachable skill fits the flows, re-read `guide`'s `SKILL.md` and update it so the map stays accurate: a new skill it never mentions, or a stale one it still routes to, is a router that lies.
 
-To (re)link every skill outside `deprecated/` and `misc/` into the local harness skill directories (`~/.claude/skills`, `~/.agents/skills`), run `scripts/link-skills.sh`. Each entry is a symlink into this repo, so a `git pull` keeps installed skills current; re-run the script after adding, removing, or renaming a skill.
+`scripts/link-skills.sh` is a maintainer-only dev script sitting outside the normal editing flow. It links every skill outside `deprecated/` and `misc/` into the local harness skill directories (`~/.claude/skills`, `~/.agents/skills`) as symlinks into this repo, so a `git pull` keeps installed skills current.
+
+Do not run it as a step of adding, removing, or renaming a skill. Those directories are the human's own local install, and a plugin install can already own those names: the script deletes any same-named real directory it finds, then repoints it at whichever checkout it was invoked from. Run it only when the human explicitly asks for a relink, and never from inside `.claude/worktrees/`: `REPO` resolves from the script's own location, so a run from a worktree points every symlink at a scratch checkout that disappears with the worktree.
 
 No em-dashes anywhere in this repo's prose (`SKILL.md` files, docs, `README.md`, `CHANGELOG.md`, ADRs, changesets, code comments). Where a sentence reaches for one, rewrite it instead with a comma, colon, period, parentheses, or a conjunction, whichever the sentence actually wants; never do a blind character substitution.
 
