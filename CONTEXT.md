@@ -15,6 +15,10 @@ _Avoid_: ticket (use only when quoting external systems that call them tickets, 
 **Decision ticket**:
 A `wayfinder` unit: a child **Issue** of a `wayfinder:map` holding a *question* whose resolution is a decision, not a slice of a build to execute. The **decision** qualifier is what keeps it distinct from an implementation ticket; `wayfinder` introduces the term, then uses "ticket".
 
+**Spec**:
+An **Issue** published by `to-spec` to the **Issue tracker**, holding the problem statement, user stories, and the list of decisions. It is the parent **Issue** of the tickets `to-tickets` produces: it stays open while those tickets are in flight and gets closed by the acceptance ticket once every child ticket is done.
+_Avoid_: spec document (it lives on the tracker as an **Issue**, not as a file in the repo), PRD
+
 **Triage role**:
 A canonical state-machine label applied to an **Issue** during triage (e.g. `needs-triage`, `ready-for-afk`). Each role maps to a real label string in the **Issue tracker** via `docs/agents/triage-labels.md`.
 
@@ -22,6 +26,7 @@ A canonical state-machine label applied to an **Issue** during triage (e.g. `nee
 
 - An **Issue tracker** holds many **Issues**
 - An **Issue** carries one **Triage role** at a time
+- A **Spec** is an **Issue** (published by `to-spec`, parent of the tickets `to-tickets` produces)
 - A **Decision ticket** is an **Issue** (a child of a `wayfinder:map`)
 
 ## Flagged ambiguities

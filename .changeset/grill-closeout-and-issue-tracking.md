@@ -1,0 +1,7 @@
+---
+"mattpocock-skills": patch
+---
+
+grill-with-docs now has an explicit close. When the grilling frontier empties, the agent states a closing classification with reasons: a decision already recorded as an ADR or CONTEXT.md update, a small change, or a multi-session build. The user can overrule the classification, and the choice between /implement and /to-spec stays with the user; the agent recommends and never enters either path on its own. The multi-session close prints two manual prompts only (run /to-spec, then run /to-tickets, before clearing context) instead of chaining into the skills.
+
+to-spec publishes the spec issue with only the spec label, no ready-for-agent, and CONTEXT.md adds Spec as a glossary term. to-tickets creates every task ticket as a native sub-issue of the source spec issue, labeled ready-for-agent. It always appends one integration acceptance ticket, blocked by every terminal ticket. The acceptance ticket read-only checks every user story and acceptance criterion and runs the full test suite. Gaps loop back as fix tickets under the same spec parent with new blocked-by edges, and verification reruns after the fix. A passing acceptance closes the parent spec issue from its pull request with a closing reference. Local markdown mode mirrors the shape: an acceptance ticket file numbered last, relative links between the spec and ticket files, label rules omitted. guide resyncs the main flow steps and the wayfinder handoff to the user-decided, manually-invoked wording.

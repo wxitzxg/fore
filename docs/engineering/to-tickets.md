@@ -41,6 +41,19 @@ The edges are the point of the artifact. They read two ways depending on the tra
 
 The edges live in the ticket either way. The medium only decides whether anything can act on them in parallel. `to-tickets` produces the artifact; running it (one session at a time, or a fleet) is your job, not the skill's.
 
+## The acceptance ticket: one guaranteed closing node
+
+Whatever shape the dependency graph has, one more ticket lands beyond the tracer-bullet tickets: the **integration acceptance ticket**, blocked by every terminal ticket (tickets nothing else depends on), labeled `ready-for-agent`.
+
+It does no implementation. It checks the spec read-only:
+
+- Every user story and acceptance criterion, one by one, each with a conclusion.
+- The full test suite and the project's verification commands.
+
+Gaps loop back instead of getting fixed in place: a fix ticket goes under the same spec parent, the acceptance ticket adds a blocked-by edge to it, and verification reruns after the fix. Only when everything passes does it close the parent spec issue, from its pull request, with a closing reference. That rule is the end of the chain: without it an open spec issue can outlive all its work; with it the spec's lifecycle is bound to the acceptance result.
+
+Local mode mirrors the shape: an acceptance ticket file numbered last, relative links to the spec file, no labels to apply.
+
 ## The wide-refactor exception
 
 One shape breaks the tracer-bullet rule. A **wide refactor** is a single mechanical change (rename a column, retype a shared symbol) whose **blast radius** fans across the whole codebase, so one edit breaks thousands of call sites and no vertical slice can land green.
@@ -62,7 +75,7 @@ Over-decomposition is the most reported friction on this skill, and it is consis
 This is the failure the vertical-slice rule is written against, and the skill still produces it sometimes. Catch it at the quiz step by asking one question per ticket: what can I demo when this is done? A ticket with no answer is a horizontal slice. Some people add a "demo path" line to each ticket for this reason, and report it nudges the model toward vertical decomposition.
 
 **On GitHub the tickets weren't created as sub-issues of the spec issue.**
-Known and unfixed. It has been reported across a dozen runs and several models, [most fully in issue #554](https://github.com/mattpocock/skills/issues/554), and it is worse on Codex than on Claude. `gh` has supported this natively since v2.94: `gh issue create --parent <n>`, and `gh issue edit <parent> --add-sub-issue <n>` after the fact. Until the tracker template prefers those, wiring the parent links yourself after a run is the reliable move.
+The skill now creates every ticket as a native sub-issue of the source spec issue. `gh` supports this directly: `gh issue create --parent <n>`, and `gh issue edit <parent> --add-sub-issue <n>` attaches one after the fact. Older runs skipped the parent links, which is why the upstream history lists it as a bug; if a run still leaves them out, attaching them yourself with those commands is the repair.
 
 **"Blocked by" was written into the issue body instead of a real blocking link.**
 Same class of problem, [reported in issue #513](https://github.com/mattpocock/skills/issues/513), where the agent went as far as asserting GitHub has no native blocking relationship at all. It does: `gh issue create --blocked-by 12,15`. Because blockers are published first, their numbers are always available at creation time. The body text is meant to be the fallback for trackers with no native edge, not the default.
@@ -87,6 +100,9 @@ The skill stops at the artifact, and there is no auto-dispatch mode. Dispatch is
 - Nothing in a ticket body is a file path or a line number, except a snippet a prototype produced.
 - Each ticket reads like something a fresh session could finish without you in the room.
 - Prefactoring, where it found any, is at the front of the order rather than mixed into feature tickets.
+- Exactly one acceptance ticket sits beyond the slices, blocked by every terminal ticket.
+- The acceptance ticket reports a conclusion per spec requirement and runs the full suite, changing no product code.
+- A passing acceptance closes the parent spec issue; a gap shows up as a fix ticket under that parent, not as an unplanned edit.
 
 ## Where it fits
 
