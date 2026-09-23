@@ -1,6 +1,6 @@
 ## What it does
 
-`to-spec` turns the conversation you have just had into a **spec**, and publishes it to your issue tracker as a single issue.
+`to-spec` turns the conversation you have just had into a **spec**, and publishes it to your issue tracker as a single issue carrying only the `spec` label.
 
 It does not interview you. By the time you reach for it the deciding is already done, so it synthesises what is known (from the thread, from the codebase, from your `CONTEXT.md` and ADRs) rather than opening a fresh round of questions. The spec is a record of decisions already made, not a place where new ones get made.
 
@@ -38,8 +38,8 @@ Those agreed seams then travel. [tdd](./tdd.md) works only at pre-agreed seams, 
 **Where did `/to-prd` go?**
 It is this skill, renamed in v1.1. "Spec" is now the single through-line term, and the old `to-prd` slug is dead; reinstall under the new name. The pair that replaced the old vocabulary is *spec* and *tickets*: the spec is the destination and the decisions that fix it, the tickets are the execution steps that get there. If you pivot, delete the unfinished tickets and keep the spec.
 
-**Why does the spec get the `ready-for-agent` label? I don't want an agent implementing off it.**
-The label means "no further triage needed": the document is complete enough for an agent to work from. It is an input designation, not a work order. But if you run AFK agents that poll for `ready-for-agent`, that distinction isn't visible to them, and they will happily try to build the whole spec in one run instead of picking up the ticket slices. This is the most-reported rough edge on the skill. Until it changes, exclude the parent spec explicitly in your AFK agent's prompt, or strip the label once `/to-tickets` has run.
+**What label does the published spec issue carry?**
+Only `spec`. The spec issue is a container, not a work order: [to-tickets](./to-tickets.md) hangs the task tickets under it as sub-issues and it gets closed once its acceptance ticket passes, so it must not look like an agent-grabbable task. Older runs of the skill also applied `ready-for-agent`; that label now belongs only on the child tickets, which removes the old rough edge where AFK agents polling for `ready-for-agent` would try to build the whole spec in one run.
 
 **Why not go straight from grilling to `/to-tickets` and skip the spec?**
 Often you should; the spec earns its step only on multi-session work. Where it pays is that the tickets are disposable and the spec isn't: each ticket is sized for one fresh context window and gets deleted or closed, while the spec stays as the one place the reasoning behind them lives. On a single-session change that buys you nothing, and you have paid an extra synthesis step where the model can drift. Go grilling → `/implement`.
@@ -66,6 +66,7 @@ Very large specs can outgrow what a tracker issue will serve back cleanly, and t
 
 - It starts writing rather than asking you a fresh round of questions.
 - It puts the seams to you before it writes, and proposes as few as it can get away with.
+- The published issue carries only the `spec` label, never `ready-for-agent`.
 - It comes back in your project's nouns, not generic product-management boilerplate.
 - Every decision in it is one you can remember making. Nothing was invented to fill a section.
 - The out-of-scope section has real things in it: the things you refused are usually the most useful lines on the page.

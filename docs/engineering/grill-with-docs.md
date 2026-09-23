@@ -40,6 +40,18 @@ That third row is the one that catches people out. `CONTEXT.md` is a glossary an
 
 The glossary is the point. Domain language is the thing this skill is actually building: the project's own words, agreed once, so you, the agent and your colleagues stop paying to re-derive them. It is worth saying that not everyone agrees this buys you agent performance: the sharpest public pushback is that a term and its plain-English expansion get the same result from the model, and that the vocabulary really compresses communication between the humans who share it. That reading still leaves the glossary valuable; it just moves the value.
 
+## How the session closes
+
+When the frontier empties, the close is explicit: the agent states which of three shapes the outcome has, with its reasons, and you can overrule the classification.
+
+| Outcome | What the close does |
+| --- | --- |
+| A decision already landed as an ADR or `CONTEXT.md` update | Points at it and says you do not need `/to-spec` |
+| A small change that fits the current context window | Recommends `/implement`, with reasons |
+| A multi-session build | Prints two prompts only: run `/to-spec`, then run `/to-tickets`, before clearing context |
+
+Nothing chains automatically. The choice between implement and spec is yours: the agent recommends and waits, and it never enters either path on its own.
+
 ## Common questions
 
 **Should I use this or `/wayfinder`?**
@@ -58,7 +70,7 @@ Into the conversation only. This is the most substantive open complaint about th
 Yes. This is the right skill for a codebase with no ADRs, no domain language and no design principles: invoke it and say "help me document my repo". The community pattern pairs it with [improve-codebase-architecture](./improve-codebase-architecture.md) for building or repairing a `CONTEXT.md`. Expect to steer it: it will read code and ask you about what it finds, and you are the one who says which of the words already in the codebase are the right ones.
 
 **What should I do when the session ends?**
-The skill's closing message tends to be open-ended, which is a known rough edge. In the main flow the answer is [to-spec](./to-spec.md), in the same conversation. If the change is small enough to build immediately, go straight to [implement](./implement.md) instead.
+Follow the close described above: the agent's classification names the one next step. A recorded decision ends there; a small change goes to [implement](./implement.md); a multi-session build means you type `/to-spec` and then `/to-tickets` yourself, before clearing context.
 
 **Why is it called that?**
 Nobody is happy with the name. There is an open suggestion to rename it `grill-domain-model`, which describes the behaviour more honestly. Nothing has moved on it. If a rename ever lands, the docs page moves with it and the URL changes.
@@ -70,10 +82,12 @@ Nobody is happy with the name. There is an open suggestion to rename it `grill-d
 - Questions the codebase can answer get answered by reading the codebase, not asked of you.
 - You get few or no ADRs, and the ones you get are decisions you would be annoyed to have to re-litigate.
 - It challenges a word you used because your existing glossary defines it differently.
+- The close names a classification with reasons and one concrete next step, instead of leaving you to guess the command.
+- The agent waits for your branch choice rather than starting `/implement` or `/to-spec` itself.
 
 ## Where it fits
 
-`grill-with-docs` is the head of the main build chain:
+`grill-with-docs` is the head of the main build chain. The chain only runs as drawn for a multi-session build; decision closes end at the recorded ADR or glossary update, and small changes go straight to implement:
 
 ```txt
 grill-with-docs → to-spec → to-tickets → implement → code-review

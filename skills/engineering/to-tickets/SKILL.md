@@ -39,13 +39,15 @@ Give each ticket its **blocking edges**: the other tickets that must complete be
 
 **Wide refactors are the exception to vertical slicing.** A **wide refactor** is one mechanical change (rename a column, retype a shared symbol) whose **blast radius** fans across the whole codebase, so a single edit breaks thousands of call sites at once and no vertical slice can land green. Don't force it into a tracer bullet; sequence it as **expand–contract**. First expand: add the new form beside the old so nothing breaks. Then migrate the call sites over in batches sized by blast radius (per package, per directory), each batch its own ticket blocked by the expand, keeping CI green batch to batch because the old form still exists. Finally contract: delete the old form once no caller remains, in a ticket blocked by every migrate batch. When even the batches can't stay green alone, keep the sequence but let them share an integration branch that all block a final integrate-and-verify ticket; green is promised only there.
 
+After the slices and their edges are settled, add one ticket that is not a tracer bullet: the **integration acceptance ticket**, blocked by every terminal ticket (a ticket nothing else depends on). It gets quizzed with the slices in step 4 and published last in step 5.
+
 ### 4. Quiz the user
 
-Present the proposed breakdown as a numbered list. For each ticket, show:
+Present the proposed breakdown as a numbered list, tracer-bullet tickets followed by the integration acceptance ticket. For each ticket, show:
 
 - **Title**: short descriptive name
 - **Blocked by**: which other tickets (if any) must complete first
-- **What it delivers**: the end-to-end behaviour this ticket makes work
+- **What it delivers**: the end-to-end behaviour this ticket makes work; for the acceptance ticket, that it verifies the spec read-only instead of delivering a slice
 
 Ask the user:
 
@@ -59,16 +61,38 @@ Iterate until the user approves the breakdown.
 
 Publish the approved tickets. **How** depends on the tracker `/setup` configured; the tickets are the same either way, only the shape of the blocking edges changes:
 
-- **Local files** → write one file per ticket under `.scratch/<feature-slug>/issues/<NN>-<slug>.md`, numbered from `01` in dependency order (blockers first). Each file's "Blocked by" lists the numbers/titles it depends on. Use the per-ticket file template below: one ticket per file, never a single combined file.
-- **A real issue tracker (GitHub, Linear, …)** → publish one issue per ticket in dependency order (blockers first) so each ticket's blocking edges can reference real identifiers. Use the platform's native blocking / sub-issue relationship where it has one; otherwise set each ticket's "Blocked by" to the blocking issues. Apply the `ready-for-agent` triage label unless instructed otherwise; the tickets are agent-grabbable by construction.
+- **Local files** → write one file per ticket under `.scratch/<feature-slug>/issues/<NN>-<slug>.md`, numbered from `01` in dependency order (blockers first) with the acceptance ticket numbered last. Each file's "Blocked by" lists the numbers/titles it depends on. Link the spec file and the ticket files to each other with relative links so the parent-child structure is visible. Label rules are omitted: local files have no labels, and the template's Status line is plain text rather than an applied label. Use the per-ticket file template below: one ticket per file, never a single combined file.
+- **A real issue tracker (GitHub, Linear, …)** → publish one issue per ticket in dependency order (blockers first) so each ticket's blocking edges can reference real identifiers. Create every ticket as a native sub-issue of the source spec issue (on GitHub: `gh issue create --parent <spec>`, or attach it after with the platform's equivalent), and apply the `ready-for-agent` label to every ticket. Set native blocking edges where the tracker supports them; otherwise write each ticket's "Blocked by" into its body. Publish the acceptance ticket last, blocked by every terminal ticket.
 
 Work the **frontier**: any ticket whose blockers are all done. For a purely linear chain that means top to bottom.
 
-Do NOT close or modify any parent issue.
+Tracer-bullet tickets never close or modify the parent spec issue. Only the acceptance ticket does, and only after it passes; see the next section.
+
+### The integration acceptance ticket
+
+Every spec gets exactly one acceptance ticket in addition to its tracer-bullet tickets, no matter the shape of the dependency graph. Its only blockers are the terminal tickets: the tickets nothing else depends on. It carries `ready-for-agent` like the task tickets.
+
+Its job is read-only verification:
+
+- Go through the spec's user stories and acceptance criteria one by one, each with a pass or gap conclusion.
+- Run the full test suite and the project's other verification commands.
+- Change no product code and no skill content.
+
+When it finds a gap:
+
+1. Create a fix ticket as a sub-issue of the same spec parent, labeled `ready-for-agent`.
+2. Add a blocked-by edge from the acceptance ticket to the fix ticket.
+3. Re-run the acceptance ticket after the fix lands. Verification is repeatable, not a one-shot action.
+
+When every check passes, close the parent spec issue from the acceptance ticket's pull request with a closing reference (`Closes #<spec>`).
+
+Local markdown mode keeps the same shape: one acceptance ticket file numbered last, relative links between the spec file and the ticket files, and label rules omitted because local files have no labels.
 
 <local-ticket-template>
 
 # <NN>: <Ticket title>
+
+**Parent:** a relative link to the spec file this ticket hangs under.
 
 **What to build:** the end-to-end behaviour this ticket makes work, from the user's perspective, not a layer-by-layer implementation list.
 
@@ -85,7 +109,7 @@ Do NOT close or modify any parent issue.
 
 ## Parent
 
-A reference to the parent issue on the tracker (if the source was an existing issue, otherwise omit this section).
+A reference to the parent spec issue on the tracker (the ticket is also created as a native sub-issue of it). If the source was the conversation rather than an existing issue, omit this section.
 
 ## What to build
 
