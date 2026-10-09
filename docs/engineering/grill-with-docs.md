@@ -2,7 +2,7 @@
 
 `grill-with-docs` interviews you about a plan or design until you and the agent share one understanding of it, and writes the vocabulary and the hard decisions into your repo while it does. It is the same interview [grill-me](../productivity/grill-me.md) runs (a round of questions, then wait, then the next round), pointed at a codebase.
 
-It is **stateful**. Every other grilling skill leaves the session in your head; this one leaves files on disk. A term gets resolved and it lands in `CONTEXT.md` the moment it resolves, not batched at the end. A decision passes three gates and it lands as an ADR. That is the whole difference, and it is also the source of most of the trouble people have with the skill: the artifacts are real files in a real repo, so they can be absent when you expected them, and they can drift when more than one person is writing them.
+It is **stateful**. Every other grilling skill leaves the session in your head; this one leaves files on disk. A term gets resolved and it lands in `GLOSSARY.md` the moment it resolves, not batched at the end. A decision passes three gates and it lands as an ADR. That is the whole difference, and it is also the source of most of the trouble people have with the skill: the artifacts are real files in a real repo, so they can be absent when you expected them, and they can drift when more than one person is writing them.
 
 ## When to reach for it
 
@@ -22,7 +22,7 @@ The wayfinder split comes down to session count: `/grill-with-docs` for single-s
 
 ## Prerequisites
 
-The skill writes into your repo, so you need to be somewhere it is safe to write. Resolved terms go to a `CONTEXT.md` glossary at the root, or to the relevant context's `CONTEXT.md`, if a `CONTEXT-MAP.md` at the root marks the repo as multi-context. Decisions go to `docs/adr/`. Both are created lazily; nothing exists until the first term or decision crystallises, so there is nothing to scaffold up front.
+The skill writes into your repo, so you need to be somewhere it is safe to write. Resolved terms go to a `GLOSSARY.md` glossary at the root, or to the relevant context's `GLOSSARY.md`, if a `GLOSSARY-MAP.md` at the root marks the repo as multi-context. Decisions go to `docs/adr/`. Both are created lazily; nothing exists until the first term or decision crystallises, so there is nothing to scaffold up front.
 
 It also needs two other skills present, because its own `SKILL.md` is one line that delegates to them: [grilling](../productivity/grilling.md) supplies the interview, [domain-modeling](./domain-modeling.md) supplies the writing. Installing `grill-with-docs` alone gets you a skill that does not work.
 
@@ -32,11 +32,11 @@ Three things come out of a session, and they are not equal.
 
 | What resolved | Where it lands |
 | --- | --- |
-| A term: the project's own word for a thing | `CONTEXT.md`, inline, the moment it resolves |
+| A term: the project's own word for a thing | `GLOSSARY.md`, inline, the moment it resolves |
 | A decision that is hard to reverse, surprising without context, and a real trade-off | An ADR under `docs/adr/` |
 | Everything else you decided | The conversation, and nowhere else |
 
-That third row is the one that catches people out. `CONTEXT.md` is a glossary and is deliberately kept as one: no implementation details, no spec, no scratch notes. ADRs are gated on all three conditions at once, so most decisions do not qualify and most sessions produce none. A session that yields a sharper glossary and zero ADRs is working as designed, but it means the bulk of what you agreed exists only in the context window you agreed it in. Hand that same conversation to [to-spec](./to-spec.md) rather than clearing it.
+That third row is the one that catches people out. `GLOSSARY.md` is a glossary and is deliberately kept as one: no implementation details, no spec, no scratch notes. ADRs are gated on all three conditions at once, so most decisions do not qualify and most sessions produce none. A session that yields a sharper glossary and zero ADRs is working as designed, but it means the bulk of what you agreed exists only in the context window you agreed it in. Hand that same conversation to [to-spec](./to-spec.md) rather than clearing it.
 
 The glossary is the point. Domain language is the thing this skill is actually building: the project's own words, agreed once, so you, the agent and your colleagues stop paying to re-derive them. It is worth saying that not everyone agrees this buys you agent performance: the sharpest public pushback is that a term and its plain-English expansion get the same result from the model, and that the vocabulary really compresses communication between the humans who share it. That reading still leaves the glossary valuable; it just moves the value.
 
@@ -57,17 +57,17 @@ Nothing chains automatically. The choice between implement and spec is yours: th
 **Should I use this or `/wayfinder`?**
 Scope decides it. Use this for anything you can settle in one session; use [wayfinder](./wayfinder.md) when the effort is too big to hold in one, and it charts the work as a map of decision tickets first. Wayfinder is slower and denser, and reaching for it on a well-scoped feature is the common mistake. It does not replace this skill: it can drop into a grilling session for the parts of the map that suit one.
 
-**It ran, but no `CONTEXT.md` and no ADRs appeared.**
+**It ran, but no `GLOSSARY.md` and no ADRs appeared.**
 Two known causes. The mundane one: nothing qualified. ADRs need all three gates, and a session about a change with no new vocabulary genuinely has nothing to write. The real bug: when the skill runs inside another orchestration layer (a spec-driven-development wrapper, a multi-agent framework, a rule that invokes it as a step in someone else's pipeline), the file-writing half is reported to silently not happen, while the interview still runs. This is filed and unfixed. If you are in that setup, check the working directory before you trust the session's output.
 
-**It asked everything at once, with no recommendations, and never mentioned `CONTEXT.md`.**
+**It asked everything at once, with no recommendations, and never mentioned `GLOSSARY.md`.**
 That is the skill failing to load its two dependencies. Because `SKILL.md` is a one-line delegation, an agent that does not pick up [grilling](../productivity/grilling.md) and [domain-modeling](./domain-modeling.md) guesses at what grilling means, and you get an undifferentiated question dump. Partial loading is the more confusing case: `grilling` loads, `domain-modeling` does not, and you get a good interview with no paper trail. It correlates with model and effort level, and it is the most reported problem with this skill. If you suspect it, ask the agent directly which skills it loaded.
 
 **Where did all my other decisions go?**
 Into the conversation only. This is the most substantive open complaint about the skill: the glossary is not a spec, most answers do not earn an ADR, and there is no ledger tying each resolved answer through to a spec, a ticket and a test. Precise answers (ordering guarantees, negative requirements, numeric defaults) get softened into weaker prose downstream, and the result can look complete while missing the thing you actually decided. The mitigation available today is to keep the session and feed it straight to [to-spec](./to-spec.md), and to re-read the spec against your own answers rather than assuming it captured them.
 
 **Can I point it at an existing repo that has no docs at all?**
-Yes. This is the right skill for a codebase with no ADRs, no domain language and no design principles: invoke it and say "help me document my repo". The community pattern pairs it with [improve-codebase-architecture](./improve-codebase-architecture.md) for building or repairing a `CONTEXT.md`. Expect to steer it: it will read code and ask you about what it finds, and you are the one who says which of the words already in the codebase are the right ones.
+Yes. This is the right skill for a codebase with no ADRs, no domain language and no design principles: invoke it and say "help me document my repo". The community pattern pairs it with [improve-codebase-architecture](./improve-codebase-architecture.md) for building or repairing a `GLOSSARY.md`. Expect to steer it: it will read code and ask you about what it finds, and you are the one who says which of the words already in the codebase are the right ones.
 
 **What should I do when the session ends?**
 Follow the close described above: the agent's classification names the one next step. A recorded decision ends there; a small change goes to [implement](./implement.md); a multi-session build means you type `/to-spec` and then `/to-tickets` yourself, before clearing context.
@@ -77,7 +77,7 @@ Nobody is happy with the name. There is an open suggestion to rename it `grill-d
 
 ## It's working if
 
-- `CONTEXT.md` changes *during* the session, term by term, rather than appearing in one lump at the end.
+- `GLOSSARY.md` changes *during* the session, term by term, rather than appearing in one lump at the end.
 - The glossary reads as pure vocabulary (your project's words with tight definitions) and contains no implementation detail or spec-like prose.
 - Questions the codebase can answer get answered by reading the codebase, not asked of you.
 - You get few or no ADRs, and the ones you get are decisions you would be annoyed to have to re-litigate.
@@ -90,7 +90,7 @@ Nobody is happy with the name. There is an open suggestion to rename it `grill-d
 `grill-with-docs` is the head of the main build chain. The chain only runs as drawn for a multi-session build; decision closes end at the recorded ADR or glossary update, and small changes go straight to implement:
 
 ```txt
-grill-with-docs → to-spec → to-tickets → implement → code-review
+grill-with-docs → to-spec → to-tickets → implement → code-review → retro
 ```
 
 It comes before anything is written down as a spec: it produces the shared understanding and settled vocabulary that [to-spec](./to-spec.md) then synthesises without interviewing you again. Its close neighbours are [grill-me](../productivity/grill-me.md), the same interview with no repo and no files, and [domain-modeling](./domain-modeling.md), the glossary-and-ADR discipline it drives; both sit on the [grilling](../productivity/grilling.md) primitive. Upstream of it, [wayfinder](./wayfinder.md) charts efforts too large for one session and can hand parts of the map back down to it. When you're unsure which skill or flow fits, [guide](./guide.md) routes you.
