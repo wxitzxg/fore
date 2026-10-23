@@ -4,6 +4,8 @@
 
 It does not ask one question at a time, and it does not ask everything at once. Each **round** asks the whole **frontier**: every decision whose prerequisites are already settled, and nothing else. Two questions never share a round if one depends on the other; a question that hinges on an answer still open belongs to a later round. Your answers settle decisions, the frontier moves outward, and the next round asks what that unblocked. Thirteen questions typically land in about three rounds rather than thirteen.
 
+The tree also has a fence around it. Before the first round the session names the one requirement or module it owns, and a question that would redesign a neighbouring module never enters a round: the agent first asks you whether to open a separate issue in that module's tracker, then either files it on the spot or parks it on an out-of-scope list, and either way it is headed for its own grilling session with the module that owns it.
+
 ## When to reach for it
 
 Type `/grilling`, or the agent reaches for it on its own when a task fits. It is the only skill in the grilling family that is model-invoked, which is why you rarely type it: usually a skill you *did* type is running it for you.
@@ -30,13 +32,27 @@ The other half of the design is the split between facts and decisions. Facts are
 
 The honest limit: the frontier is the agent's judgement, not a computed graph. It can put two questions in one round and only afterwards discover that one answer should have changed the other. There is no guard against that beyond telling it, which reopens the affected branch in the next round.
 
+## The scope boundary
+
+The design tree is only allowed to grow inside the one requirement or module the session opened with. When a frontier question reaches across a module boundary, it is sorted before it is asked:
+
+| What the question is | Where it goes |
+| --- | --- |
+| A fact about how the other module already works | Looked up by the agent, like any other fact; never asked |
+| The local seam: which existing capability this module consumes, what it assumes at the boundary | Asked in this session, it is a decision this module owns |
+| Anything that would change or extend the other module (its internals, what it offers next) | First you are asked whether to open a separate issue; filed immediately if yes, parked on the list if no |
+
+The canonical case is a new interface other apps will call. How that interface plugs into the existing authentication mechanism is a seam decision and stays in the session. How callers authenticate and what tokens get issued is the auth module's business: the agent stops and asks whether to open an auth-module issue, files it with a short title and a line or two of context if you say yes, and otherwise parks it. The interface design then keeps moving, carrying only the assumption it took at the boundary ("it uses whatever the auth module already provides").
+
+The "should this be an issue" question is asked immediately, as a plain yes/no outside the round format, because it is not a design decision and it never waits behind the frontier. A filed issue can still be vague; run it through [triage](../engineering/triage.md) later rather than trying to sharpen it mid-session. Filed links and parked items are shown whenever the list grows and restated when the session closes. None of it is decided here, and the list never blocks the frontier.
+
 ## What lives here and what lives in the wrappers
 
 This page covers the mechanism. The things people most often want are documented one level up.
 
 | Question | Where it is answered |
 | --- | --- |
-| The tree, the frontier, rounds, the question format, facts vs decisions | Here |
+| The tree, the frontier, rounds, the question format, facts vs decisions, the scope boundary | Here |
 | How long a session should run, what to do with a question you can't answer by talking, how to avoid nodding along | [grill-me](./grill-me.md) |
 | What gets written to `GLOSSARY.md`, what becomes an ADR | [grill-with-docs](../engineering/grill-with-docs.md) |
 
@@ -56,6 +72,9 @@ Into this skill. Round-based questioning shipped briefly as a separate skill, th
 
 **Asking a whole round at once must lose the questions my earlier answers would have raised. Doesn't it?**
 This is the most common objection to the round design, and the frontier is the answer to it: a round only ever contains questions that do not depend on each other, so no answer in a round can invalidate another question in that round. Answers still reshape everything downstream: the next round is recomputed, not pre-written. What you lose is smaller than "all questions at once" implies, and larger than nothing: see the frontier's limit above.
+
+**It spent ten minutes grilling me about authentication, but authentication is another module's job.**
+That is a boundary breach, not intended behaviour: the only cross-boundary design question the session should put to you is the seam, what this module consumes and assumes at the edge. Everything else about the other module triggers a different kind of question, asked once and immediately: "open a separate issue for this in the auth module?" A yes gets it filed on the spot; a no parks it. If a run asks you the actual auth questions anyway, the in-flight fix is plain language: "auth is the auth module's business, file it as a separate issue." The item goes on the out-of-scope list and is owed its own session with that module's owners.
 
 **It ran out of questions and started building.**
 A confirmation gate exists precisely for this: the skill is not finished when the frontier empties, it is finished when you say the understanding is shared. Weaker and faster models still break it; this is reported most often on lower-effort or non-frontier models, which collapse "interview until shared understanding" into a couple of questions and an outline. If yours does it, the reliable fix is a line in your own `AGENTS.md` or `CLAUDE.md` telling the agent not to implement without permission.
@@ -78,6 +97,8 @@ A real and unfixed rough edge, reported across harnesses and models: a skill tha
 - Nothing in a round needs another question in the same round answered first.
 - Later rounds ask things the first round could not have asked.
 - It goes and looks facts up (reading files, dispatching a sub-agent) rather than asking you something it could have found out.
+- A question that would change another module never lands as a design question; you get one immediate yes/no ("open a separate issue?"), the item is filed or parked, and the design names the assumption it takes at that boundary.
+- The session closes with the out-of-scope list restated, each item either a filed issue link or a parked candidate for its own session, never an open thread here.
 - Research running in the background does not stall the round; only the questions that depend on it wait.
 - It stops at the end and asks you to confirm the understanding is shared, instead of starting work.
 - Question count stays high while round count stays low.
