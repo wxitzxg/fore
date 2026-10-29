@@ -1,0 +1,5 @@
+interface:
+  display_name: "Worktree"
+  short_description: "Open a git worktree, named from your prompt"
+policy:
+  allow_implicit_invocation: false

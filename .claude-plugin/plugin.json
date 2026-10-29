@@ -47,6 +47,7 @@
     "./skills/productivity/teach",
     "./skills/productivity/to-questionnaire",
     "./skills/productivity/wait-what",
+    "./skills/productivity/worktree",
     "./skills/productivity/writing-for-agents"
   ]
 }

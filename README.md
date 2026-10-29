@@ -216,6 +216,7 @@ General workflow tools, not code-specific.
 - **[teach](./skills/productivity/teach/SKILL.md)**: Teach the user a new skill or concept over multiple sessions, using the current directory as a stateful teaching workspace.
 - **[to-questionnaire](./skills/productivity/to-questionnaire/SKILL.md)**: Turn a decision you cannot answer alone into a Markdown questionnaire for the one person who can, filled in async, or together over a meeting. It grills you about the send (who it is for, what you need back), not the subject.
 - **[wait-what](./skills/productivity/wait-what/SKILL.md)**: Fire this the moment a message does not land. The agent re-pitches it with the context you are missing, in plain English, using your `GLOSSARY.md` vocabulary.
+- **[worktree](./skills/productivity/worktree/SKILL.md)**: Open a git worktree, naming it from what you are about to do.
 
 
 **Model-invoked**
