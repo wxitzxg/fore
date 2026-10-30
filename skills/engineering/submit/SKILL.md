@@ -8,7 +8,7 @@ disable-model-invocation: true
 
 The user has finished an implement session. They run `/submit` themselves, in the same session and before clearing context, because the session knows which tickets were implemented. Submit pushes the current branch to `origin`, opens one pull request (GitHub) or merge request (GitLab), prints the link, and stops.
 
-The request body comes from the `pr` skill; submit appends closing references so merging the request by hand closes the linked issues on the tracker.
+Submit writes the request body itself (Summary, Evidence, Merge Danger) and appends closing references so merging the request by hand closes the linked issues on the tracker.
 
 ## Hard boundaries
 
@@ -137,16 +137,30 @@ If one exists, print its URL and stop. Nothing is pushed and nothing is duplicat
 
 ## 6. Generate the body
 
-Call the Skill tool with "pr" to generate the pull request body from the primary sources (the tickets, the spec, the commits). Then append a closing section at the end of that body. One reference per line so every issue closes:
+Write the request body from the primary sources (the tickets, the spec, the commits). Keep prose brief, no preamble:
 
 ```markdown
+## Summary
+
+<the smallest view that makes the change clear: a diagram, tree, diff-sketch, or pseudocode>
+
+## Evidence
+
+- **Before:** <failing test run / output / screenshot>
+  **After:** <passing test run / output / screenshot>
+
+## Merge Danger
+
+**Door:** <one-way or two-way>
+**Blast Radius:** <one word, plus optional ramifications>
+
 ## Closes
 
 Closes #3
 Closes #4
 ```
 
-GitHub and GitLab both treat `Closes #<n>` in a request description as a closing reference, recorded when the request merges. The issues live in the origin project, so bare `#n` references are correct; never invent cross-repo URLs.
+The summary is a picture, not a paragraph: pick the smallest view that carries the point, place each visual next to the short text it supports, and keep only the calls, files, props and boundaries the reviewer needs. A one-way door is a destructive or hard-to-reverse change; a two-way door is cheap to roll back. Append one `Closes #<n>` per linked issue; GitHub and GitLab both read `Closes #<n>` in the description as a closing reference when the request merges, and the issues live in the origin project, so bare `#n` is correct, never cross-repo URLs.
 
 Write the finished body to a temp file for the create command.
 
