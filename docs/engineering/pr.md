@@ -1,3 +1,5 @@
+> **Archived.** The `pr` skill was folded into [`submit`](./submit.md), which now writes the request body itself, so `pr` is no longer shipped. The page stays up for reference.
+
 ## What it does
 
 `pr` is the shape a pull request body should take: a **Summary** that shows the change, **Evidence** that it works, and a **Merge Danger** call on how risky it is to land. It is a format reference, not a workflow. It produces body text and nothing else: no branch is pushed, no request is opened, no tracker is written.
