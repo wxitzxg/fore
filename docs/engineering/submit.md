@@ -20,7 +20,7 @@ Run it in the same session that just ran implement, before clearing or compactin
 ## Prerequisites
 
 - **A configured tracker.** Submit reads `docs/agents/issue-tracker.md` (written by [setup](./setup.md)) to pick GitHub or GitLab, falling back to the origin hostname. A local markdown tracker or an unidentifiable remote fails fast and points you at setup, because a code host cannot close markdown files under `.scratch/`.
-- **Committed work on a non-default branch.** A dirty working tree is refused, since uncommitted work would be silently left out. A default branch is not refused outright: submit asks whether to open a worktree and resume from it, since committing straight to the default branch bypasses review.
+- **Work on a reviewable branch.** Neither a dirty tree nor the default branch stops submit outright. Both become options in the single gate: a dirty tree gets a `Commit the changes` option, and a default branch gets `New branch` or `Worktree`, so never fix state and rerun; committing straight to the default branch still bypasses review, so the gate moves the work before the commit.
 - The platform CLI: `gh` for GitHub, `glab` for GitLab, authenticated against the origin host.
 
 ## How it finds the issues
@@ -32,7 +32,7 @@ The linked issues are resolved in a fixed order of confidence:
 3. Digits in the branch name, carried forward as a suggested candidate you settle at the gate.
 4. Nothing at all: no candidate, and you type one through `Other` or the `/submit` args rather than the skill guessing.
 
-Before any network write you get one confirmation gate. The title is not asked: it uses the proposed value, and a custom title arrives through `Other` or the args. When candidates exist, issues are a none-or-each-candidate choice; always joined by a submit-or-cancel question, which is the only question when there are no candidates. A custom value is typed through `Other` in the same turn, so there is never a second prompt. The proposed title comes from the ticket (one ticket), the common parent or spec (multiple tickets), or the latest commit subject as a fallback.
+Before any network write you get one gate, a single `AskUserQuestion` that covers every decision in one turn: commit the dirty work, land on the right branch, name the request (the proposed title versus `Type my own`), pick the issues to close (none or each candidate), and confirm the create, which defaults to a non-draft request. A custom title or issue number is typed through `Other` in the same turn, so there is never a second prompt. The proposed title comes from the ticket (one ticket), the common parent or spec (multiple tickets), or the latest commit subject as a fallback.
 
 Origin is the only target, and the base branch must live inside it; a request naming upstream or another remote is refused even when asked for explicitly. A draft is requested through `/submit` args and still opens a request that cannot be merged until you promote it on the code host.
 
@@ -56,8 +56,8 @@ No, not silently. The request closes exactly the issues you pick in the gate: ar
 
 ## It's working if
 
-- With a dirty tree it refuses before any network command runs; on the default branch it offers a worktree instead of writing.
-- A single confirmation gate uses the proposed title without asking, asks the issues (none or each candidate) and submit-or-cancel, collects any custom value through `Other` with no second prompt, and nothing writes until you pick.
+- A dirty tree and a default branch both appear as options in the gate rather than stopping submit; nothing writes until the gate is answered.
+- One gate covers commit, branch, title, issues, and create as a single `AskUserQuestion`, collects any custom value through `Other` with no second prompt, and nothing writes until you pick.
 - Exactly one request exists for the branch afterward; rerunning submit returns its link instead of making another.
 - The request body contains the Summary, Evidence and Merge Danger sections and one `Closes #<n>` line per linked issue.
 - Merging the request by hand closes those issues with a closed-by record, and submit itself did not merge, wait on checks, or clean anything up.

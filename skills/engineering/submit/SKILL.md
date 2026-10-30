@@ -1,213 +1,213 @@
 ---
 name: submit
-description: "Push the current branch and open a pull request or merge request whose body closes the linked issues. Run it yourself after implement, in the same session and before clearing context."
+description: "Push the current branch to origin and open one pull request or merge request whose body closes the issue(s) you pick. Run it yourself right after implement, in the same session and before clearing context."
 disable-model-invocation: true
 ---
 
 # Submit
 
-The user has finished an implement session. They run `/submit` themselves, in the same session and before clearing context, because the session knows which tickets were implemented. Submit pushes the current branch to `origin`, opens one pull request (GitHub) or merge request (GitLab), prints the link, and stops.
+Ship what implement just built. Submit puts the work on a reviewable branch in
+`origin`, opens one request, and prints its link. You merge it by hand afterward;
+submit never merges.
 
-Submit writes the request body itself (Summary, Evidence, Merge Danger) and appends closing references so merging the request by hand closes the linked issues on the tracker.
+Every decision that is yours lands in one gate, answered in a single turn: commit
+the uncommitted work, get it onto the right branch, name the request, pick the
+issues it closes, and confirm. Nothing writes before that gate, and nothing is
+asked twice.
 
-## Hard boundaries
+## The gate
 
-These never move, no matter what arguments the user passes:
+One `AskUserQuestion`, composed from the state you detected on the way in. Each
+point appears only when its condition holds:
 
-- Never merge, never wait on checks, never do post-merge cleanup. The user merges by hand and keeps control of CI.
-- Never force push, and no flag enables it.
-- Target `origin` only. A request naming `upstream` or any other remote is refused, and the base branch must be a branch inside `origin`.
-- The request closes exactly the issues the user picks in the gate, and nothing else.
-- One request per branch. If a request already exists, open, merged, or closed, return its link and stop.
+| Point | Asked when | Options |
+| --- | --- | --- |
+| Commit | the working tree is dirty | `Commit the changes` (default), `Cancel` |
+| Branch | the current branch is `origin`'s default | `New branch` (default), `Worktree` |
+| Title | always | `Auto: <proposal>` (default), `Type my own` |
+| Closes | an issue candidate exists | `Close #<n> <title>` (one per candidate, first is default), `None` |
+| Create | always | `Create` (default), `Cancel` |
 
-## 1. Guards
+`AskUserQuestion` holds four questions. When a dirty tree and the default branch
+coincide, the Commit and Branch points merge into one landing question and a
+worktree is not offered there, because a worktree does not carry uncommitted
+changes, which would stay behind on the default branch.
 
-Run these first, in this order, and fail fast with the exact message given:
+A custom title or an issue number not listed arrives through `Other` in the same
+turn. There is no second prompt.
 
-1. **Dirty working tree.** Any output means dirty, including untracked files:
+## Resolve before the gate
+
+Settle everything the gate does not ask, with no interaction:
+
+1. **State.** Dirty tree and current branch:
 
    ```bash
-   git status --porcelain
-   ```
-
-   If non-empty, stop:
-
-   > The working tree has uncommitted changes, which would be silently left out of the request. Commit, stash, or remove them, then run /submit again.
-
-2. **Default branch.** Resolve `origin`'s default branch name and the current branch:
-
-   ```bash
+   git status --porcelain          # non-empty means dirty, untracked files included
    git rev-parse --abbrev-ref HEAD
    ```
 
-   If the current branch is the default branch, ask once with `AskUserQuestion` instead of refusing:
-
-   - `New worktree` (default): hand the task to the `worktree` skill with a name derived from what this session implemented (a ticket or spec title) or the latest non-merge commit subject, falling back to letting the worktree skill ask. The worktree opens and switches, then submit resumes from that branch, which no longer trips this guard.
-   - `Cancel`: stop here.
-
-   > Submitting from the default branch `<name>` bypasses review.
-
-## 2. Resolve platform and target
-
-Determine the platform in this order:
-
-1. Read `docs/agents/issue-tracker.md`. Its heading names the platform: GitHub, GitLab, or Local Markdown.
-2. If the file is missing, fall back to the `origin` hostname (`git remote get-url origin`): `github.com` means GitHub; `gitlab.com` or a self-hosted GitLab host means GitLab.
-3. Everything else stops:
+2. **Platform and target.** Read `docs/agents/issue-tracker.md`; its heading names
+   GitHub, GitLab, or Local Markdown. Missing file, fall back to the `origin`
+   hostname: `github.com` is GitHub, `gitlab.com` or a self-hosted GitLab host is
+   GitLab. Anything else, or a Local Markdown tracker, stops:
 
    > This repo has no identifiable GitHub or GitLab tracker, so merging a request cannot close its issues. Run /setup to configure the issue tracker, then run /submit again.
 
-A **Local Markdown** tracker (or any freeform tracker) stops with the same message: markdown files under `.scratch/` cannot receive closed-by records from a code host.
+   Refuse any remote but `origin`:
 
-Refuse any remote that is not `origin`, in words:
+   > submit only targets origin. A request against `<remote>` is refused even when named explicitly.
 
-> submit only targets origin. A request against `<remote>` is refused even when named explicitly.
+   Derive `<owner>/<repo>` from the origin URL once. Resolve the base branch
+   (normally the default branch) and confirm it exists on the remote before
+   anything else:
 
-Resolve the base branch (normally `origin`'s default branch) and confirm it exists on the remote before anything else:
+   ```bash
+   git ls-remote --heads origin "<base>"
+   ```
 
-```bash
-git ls-remote --heads origin "<base>"
-```
+   GitHub default branch (REST works with a fine-grained token, GraphQL does not):
 
-Derive `<owner>/<repo>` from the origin URL once and reuse it. GitHub default branch (REST works with fine-grained tokens that cannot use GraphQL):
+   ```bash
+   gh api "repos/<owner>/<repo>" --jq .default_branch
+   ```
 
-```bash
-gh api "repos/<owner>/<repo>" --jq .default_branch
-```
+   GitLab default branch (path-encode the project, e.g. `group%2Fproject`):
 
-GitLab default branch (encode the project path from the origin URL, e.g. `group%2Fproject`):
+   ```bash
+   glab api "projects/<encoded-path>" --jq .default_branch
+   ```
 
-```bash
-glab api "projects/<encoded-path>" --jq .default_branch
-```
+3. **Issue candidates.** Collect them in this order of confidence, stopping at the
+   first level that yields anything. Carried forward here, never confirmed: the
+   gate settles them.
 
-## 3. Resolve the issues to close
+   1. Explicit arguments to `/submit` (digits, `#123`, issue URLs) win over everything.
+   2. This implement session's context: a ticket, a ticket set, or a spec. For a
+      spec, include only the tickets produced from it.
+   3. Digits in the branch name, carried as a suggested candidate rather than fact.
+   4. Nothing: no candidate; the gate's `Other` lets the user type one.
 
-Collect the linked issue candidates in this fixed order of confidence, stopping at the first level that yields anything. Nothing is asked here: the gate settles every issue, so a candidate is carried forward, not confirmed.
+   Verify every candidate exists before the gate:
 
-1. **Explicit arguments.** Digits, `#123`, or issue URLs passed to `/submit` win over everything. Resolve each and verify it exists.
-2. **Implement session context.** This conversation is an implement session, so use what it was given: a single ticket, a ticket set, or a spec. For a spec, include the tickets produced from it, never other issues mentioning it.
-3. **Branch-name digits.** If the branch name contains digits (for example `fix-login-12`), verify the issue exists and carry it forward as a candidate, marked suggested rather than fact.
-4. **Nothing found.** Carry forward no candidate; the gate's `Other` choice lets the user type one in the same turn.
+   ```bash
+   # GitHub
+   gh api "repos/<owner>/<repo>/issues/<n>"
+   # GitLab
+   glab issue view <n>
+   ```
 
-Verify every candidate exists before using it:
+   Drop or correct a reference that does not resolve, and say so.
 
-```bash
-# GitHub (REST works with fine-grained tokens that cannot use GraphQL)
-gh api "repos/<owner>/<repo>/issues/<n>"
-# GitLab
-glab issue view <n>
-```
+4. **Title proposal.** One proposal that seeds the gate's `Auto` option:
 
-Drop or correct a reference that does not resolve, and say so.
+   | Session shape | Proposal |
+   | --- | --- |
+   | One ticket | That ticket's title |
+   | Multiple tickets | Their common parent's title, or the spec title |
+   | Neither | Latest commit subject: `git log -1 --pretty=%s` |
+   | No commits | Empty, filled by hand |
 
-## 4. Propose a title
+5. **Existing request.** Before any write, check whether this branch already has a
+   request, open, merged, or closed:
 
-Propose one title as the automatic default in the gate:
+   ```bash
+   # GitHub
+   gh api "repos/<owner>/<repo>/pulls?head=<owner>:<branch>&state=all&per_page=1&sort=updated&direction=desc" --jq 'if length > 0 then .[0] | {url: .html_url, state, merged} else empty end'
+   # GitLab
+   glab mr list --source-branch "<branch>" --state all -F json
+   ```
 
-| Session shape | Proposed title |
-| --- | --- |
-| One ticket | That ticket's title |
-| Multiple tickets | Their common parent's title, or the spec title |
-| Neither | Latest commit subject: `git log -1 --pretty=%s` |
-| No commits | An empty title field, to fill in by hand |
+   Empty output means none exists. If one does, print its URL, say whether it is
+   open, merged, or closed, and stop: no question is needed and nothing is pushed
+   or duplicated.
 
-## 5. Check for an existing request
+## Act after the gate
 
-Before any network write, check whether the branch already has a request, open or closed:
+Carry out the answers, in order:
 
-GitHub:
+1. **Land the work.** From the Commit and Branch answers:
 
-```bash
-gh api "repos/<owner>/<repo>/pulls?head=<owner>:<branch>&state=all&per_page=1&sort=updated&direction=desc" --jq 'if length > 0 then .[0] | {url: .html_url, state, merged} else empty end'
-```
+   - Commit the changes: `git add -A` then `git commit` with a message derived
+     from the session (the ticket title, or the work's theme).
+   - On the default branch: `git switch -c <name>` first, so the commit lands off
+     the default branch; or open a worktree through the `worktree` skill when the
+     tree was clean and the user picked `Worktree`, then resume from that branch.
 
-An empty output means none exists. Do not treat a `null` line from `.[0]` on an empty array as a found request.
+   A `New branch` on a default branch with no commits yet still works: the first
+   commit lands on the new branch and the default branch stays unborn.
 
-GitLab:
+2. **Body.** Write the request body from the primary sources (the tickets, the
+   spec, the commits), keeping prose brief and no preamble, then close with one
+   reference per line so each picked issue closes on merge:
 
-```bash
-glab mr list --source-branch "<branch>" --state all -F json
-```
+   ```markdown
+   ## Summary
 
-If a request exists, print its URL, say whether it is open, merged, or closed, and stop. A merged branch has nothing left to submit, and an open or closed request already exists, so nothing is pushed or duplicated in any case.
+   <the smallest view that makes the change clear: a diagram, tree, diff-sketch, or pseudocode>
 
-## 6. Generate the body
+   ## Evidence
 
-Write the request body from the primary sources (the tickets, the spec, the commits). Keep prose brief, no preamble:
+   - **Before:** <failing test run / output / screenshot>
+     **After:** <passing test run / output / screenshot>
 
-```markdown
-## Summary
+   ## Merge Danger
 
-<the smallest view that makes the change clear: a diagram, tree, diff-sketch, or pseudocode>
+   **Door:** <one-way or two-way>
+   **Blast Radius:** <one word, plus optional ramifications>
 
-## Evidence
+   ## Closes
 
-- **Before:** <failing test run / output / screenshot>
-  **After:** <passing test run / output / screenshot>
+   Closes #3
+   Closes #4
+   ```
 
-## Merge Danger
+   The summary is a picture, not a paragraph: pick the smallest view that carries
+   the point, place each visual next to the short text it supports, and keep only
+   the calls, files, props and boundaries the reviewer needs. A one-way door is a
+   destructive or hard-to-reverse change; a two-way door is cheap to roll back.
+   GitHub and GitLab both read `Closes #<n>` in a request description as a closing
+   reference, and the issues live in the origin project, so bare `#n` is correct;
+   never invent cross-repo URLs. Write the finished body to a temp file.
 
-**Door:** <one-way or two-way>
-**Blast Radius:** <one word, plus optional ramifications>
+3. **Push.** Push the branch to `origin`, no force options:
 
-## Closes
+   ```bash
+   git push -u origin HEAD
+   ```
 
-Closes #3
-Closes #4
-```
+   A non-fast-forward rejection stops here:
 
-The summary is a picture, not a paragraph: pick the smallest view that carries the point, place each visual next to the short text it supports, and keep only the calls, files, props and boundaries the reviewer needs. A one-way door is a destructive or hard-to-reverse change; a two-way door is cheap to roll back. Append one `Closes #<n>` per linked issue; GitHub and GitLab both read `Closes #<n>` in the description as a closing reference when the request merges, and the issues live in the origin project, so bare `#n` is correct, never cross-repo URLs.
+   > The push was rejected because origin/<branch> has commits this branch does not. Rebase onto origin/<branch>, or merge it into your branch, resolve, commit, and run /submit again. Submit never force pushes.
 
-Write the finished body to a temp file for the create command.
+4. **Open the request.** GitHub (REST, since `gh pr create` uses GraphQL and a
+   fine-grained token cannot):
 
-## 7. Confirm once
+   ```bash
+   gh api --method POST "repos/<owner>/<repo>/pulls" \
+     -f title="<title>" -f head="<branch>" -f base="<base>" \
+     -f body="$(cat <body-file>)" \
+     --jq .html_url
+   # add -f draft=true for a draft request
+   ```
 
-Ask once, with a single `AskUserQuestion`. There is no second prompt and no follow-up gate.
+   GitLab:
 
-The title is never asked; it uses the step 4 proposal, and a custom title arrives through `Other` or `/submit` args.
+   ```bash
+   glab mr create --source-branch "<branch>" --target-branch "<base>" --title "<title>" --description-file "<body-file>"
+   # add --draft for a draft request
+   ```
 
-When step 3 produced candidates, ask the issues:
+   Print the URL and stop. The tracker closes the issues the user picked, with a
+   closed-by record.
 
-- `None` (default where every candidate is only suggested)
-- `Close #<n> <title>` (one option per candidate; a candidate from arguments or the session is default)
+## Boundaries
 
-Always ask last:
+Hard rules that hold for any arguments:
 
-- `Submit` (default)
-- `Cancel`
-
-With no candidates, skip the issue question and ask only `Submit` versus `Cancel`. A custom issue number is typed into `Other` in the same turn, never a second question. Submit defaults to a non-draft request; a draft is requested through `/submit` args, not through the gate.
-
-## 8. Push
-
-Push the branch to `origin` without force options:
-
-```bash
-git push -u origin HEAD
-```
-
-If the push is rejected as non-fast-forward, stop:
-
-> The push was rejected because origin/<branch> has commits this branch does not. Rebase onto origin/<branch>, or merge it into your branch, resolve, commit, and run /submit again. Submit never force pushes.
-
-## 9. Open the request
-
-GitHub (REST, since `gh pr create` uses GraphQL and fails under a fine-grained token):
-
-```bash
-gh api --method POST "repos/<owner>/<repo>/pulls" \
-  -f title="<title>" -f head="<branch>" -f base="<base>" \
-  -f body="$(cat <body-file>)" \
-  --jq .html_url
-# add -f draft=true for a draft request
-```
-
-GitLab:
-
-```bash
-glab mr create --source-branch "<branch>" --target-branch "<base>" --title "<title>" --description-file "<body-file>"
-# add --draft for a draft request
-```
-
-Print the request URL and stop. The tracker closes the issues the user picked, with a closed-by record.
+- You push and open; the user merges by hand and keeps control of CI.
+- Never force push, and no flag enables it.
+- Target `origin` only; the base branch must live inside `origin`.
+- The request closes exactly the issues picked in the gate, and nothing else.
+- One request per branch. If one already exists, open, merged, or closed, return
+  its link and stop.
