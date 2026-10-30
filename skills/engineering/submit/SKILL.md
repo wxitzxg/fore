@@ -179,11 +179,14 @@ If the push is rejected as non-fast-forward, stop:
 
 ## 9. Open the request
 
-GitHub:
+GitHub (REST, since `gh pr create` uses GraphQL and fails under a fine-grained token):
 
 ```bash
-gh pr create --base "<base>" --title "<title>" --body-file "<body-file>"
-# add --draft for a draft request
+gh api --method POST "repos/<owner>/<repo>/pulls" \
+  -f title="<title>" -f head="<branch>" -f base="<base>" \
+  -f body="$(cat <body-file>)" \
+  --jq .html_url
+# add -f draft=true for a draft request
 ```
 
 GitLab:
