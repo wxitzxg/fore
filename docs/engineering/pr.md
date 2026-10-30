@@ -42,7 +42,7 @@ Not blindly, and that is the point of stating it. The agent that wrote the chang
 
 **Does it push the branch or open the pull request?**
 
-No. It writes body text only and performs no git or tracker writes. To push and open the request, run [submit](./submit.md), which generates the body by calling this skill and adds the closing references. [implement-spec](./implement-spec.md) is the one skill that opens a request itself, a draft PR, when your issue tracker closes work through PRs or when you ask for one; its draft body takes this shape too.
+No. It writes body text only and performs no git or tracker writes. To push and open the request, run [submit](./submit.md), which generates the body by calling this skill and adds the closing references.
 
 **Won't it just produce another wall of text and diagrams?**
 
