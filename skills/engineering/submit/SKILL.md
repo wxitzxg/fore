@@ -17,7 +17,7 @@ These never move, no matter what arguments the user passes:
 - Never merge, never wait on checks, never do post-merge cleanup. The user merges by hand and keeps control of CI.
 - Never force push, and no flag enables it.
 - Target `origin` only. A request naming `upstream` or any other remote is refused, and the base branch must be a branch inside `origin`.
-- Never guess an issue silently. A guess that is not confirmed in writing stops the flow.
+- The request closes exactly the issues the user picks in the gate, and nothing else.
 - One request per branch. If an open request already exists, return its link.
 
 ## 1. Guards
@@ -30,9 +30,12 @@ Run these first, in this order, and fail fast with the exact message given:
    git rev-parse --abbrev-ref HEAD
    ```
 
-   If the current branch is the default branch, stop:
+   If the current branch is the default branch, ask once with `AskUserQuestion` instead of refusing:
 
-   > Refusing to submit from the default branch `<name>`. Work committed here bypasses review. Create a feature branch first, then run /submit again.
+   - `New worktree` (default): hand the task to the `worktree` skill with a name derived from the ticket or the latest commit subject, so it opens and switches without prompting again, then resume submit from that branch, which no longer trips this guard.
+   - `Cancel`: stop here.
+
+   > Submitting from the default branch `<name>` bypasses review.
 
 2. **Dirty working tree.** Any output means dirty, including untracked files:
 
@@ -80,18 +83,12 @@ glab api "projects/<encoded-path>" --jq .default_branch
 
 ## 3. Resolve the issues to close
 
-Find the linked issues in this fixed order of confidence. Stop at the first level that yields anything.
+Collect the linked issue candidates in this fixed order of confidence, stopping at the first level that yields anything. Nothing is asked here: the gate settles every issue, so a candidate is carried forward, not confirmed.
 
 1. **Explicit arguments.** Digits, `#123`, or issue URLs passed to `/submit` win over everything. Resolve each and verify it exists.
 2. **Implement session context.** This conversation is an implement session, so use what it was given: a single ticket, a ticket set, or a spec. For a spec, include the tickets produced from it, never other issues mentioning it.
-3. **Branch-name digits.** If the branch name contains digits (for example `fix-login-12`), offer that issue as a suggestion only:
-
-   > The branch name suggests #12, `<title>`. Close it when this request merges? Answer yes or give the issue number.
-
-   Do not proceed without an explicit answer.
-4. **Nothing found.** Stop and ask:
-
-   > No linked issue was found in the arguments, this session, or the branch name. Give the issue number to close, then run /submit again.
+3. **Branch-name digits.** If the branch name contains digits (for example `fix-login-12`), verify the issue exists and carry it forward as a candidate, marked suggested rather than fact.
+4. **Nothing found.** Carry forward no candidate; the gate's `Other` choice lets the user type one in the same turn.
 
 Verify every candidate exists before using it:
 
@@ -106,7 +103,7 @@ Drop or correct a reference that does not resolve, and say so.
 
 ## 4. Propose a title
 
-Propose one title, always editable in the gate:
+Propose one title as the automatic default in the gate:
 
 | Session shape | Proposed title |
 | --- | --- |
@@ -150,21 +147,23 @@ GitHub and GitLab both treat `Closes #<n>` in a request description as a closing
 
 Write the finished body to a temp file for the create command.
 
-## 7. Confirmation gate
+## 7. Confirm once
 
-Show this gate before any network write, and wait for approval:
+Ask once, with a single `AskUserQuestion`. There is no second prompt and no follow-up gate.
 
-```text
-Target: origin (<platform>, <owner/repo>)
-Base: <base branch>
-Title: <proposed title>
-Draft: <yes/no>
-Closes on merge:
-  #3 <title>
-  #4 <title>
-```
+The title is never asked; it uses the step 4 proposal, and a custom title arrives through `Other` or `/submit` args.
 
-Every field is editable on request, and the title is always offered for editing even when the proposal is strong. Ask whether the request should be a draft; a draft request cannot be merged accidentally.
+When step 3 produced candidates, ask the issues:
+
+- `None` (default where every candidate is only suggested)
+- `Close #<n> <title>` (one option per candidate; a candidate from arguments or the session is default)
+
+Always ask last:
+
+- `Submit` (default)
+- `Cancel`
+
+With no candidates, skip the issue question and ask only `Submit` versus `Cancel`. A custom issue number is typed into `Other` in the same turn, never a second question. Submit defaults to a non-draft request; a draft is requested through `/submit` args, not through the gate.
 
 ## 8. Push
 
@@ -194,4 +193,4 @@ glab mr create --source-branch "<branch>" --target-branch "<base>" --title "<tit
 # add --draft for a draft request
 ```
 
-Print the request URL and stop. Do not watch checks, do not merge, do not edit the tickets. The user reviews CI and merges by hand; the tracker closes the listed issues with a closed-by record.
+Print the request URL and stop. The tracker closes the issues the user picked, with a closed-by record.
