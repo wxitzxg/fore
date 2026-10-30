@@ -24,20 +24,7 @@ These never move, no matter what arguments the user passes:
 
 Run these first, in this order, and fail fast with the exact message given:
 
-1. **Default branch.** Resolve `origin`'s default branch name and the current branch:
-
-   ```bash
-   git rev-parse --abbrev-ref HEAD
-   ```
-
-   If the current branch is the default branch, ask once with `AskUserQuestion` instead of refusing:
-
-   - `New worktree` (default): hand the task to the `worktree` skill with a name derived from the ticket or the latest commit subject, so it opens and switches without prompting again, then resume submit from that branch, which no longer trips this guard.
-   - `Cancel`: stop here.
-
-   > Submitting from the default branch `<name>` bypasses review.
-
-2. **Dirty working tree.** Any output means dirty, including untracked files:
+1. **Dirty working tree.** Any output means dirty, including untracked files:
 
    ```bash
    git status --porcelain
@@ -46,6 +33,19 @@ Run these first, in this order, and fail fast with the exact message given:
    If non-empty, stop:
 
    > The working tree has uncommitted changes, which would be silently left out of the request. Commit, stash, or remove them, then run /submit again.
+
+2. **Default branch.** Resolve `origin`'s default branch name and the current branch:
+
+   ```bash
+   git rev-parse --abbrev-ref HEAD
+   ```
+
+   If the current branch is the default branch, ask once with `AskUserQuestion` instead of refusing:
+
+   - `New worktree` (default): hand the task to the `worktree` skill with a name derived from what this session implemented (a ticket or spec title) or the latest non-merge commit subject, falling back to letting the worktree skill ask. The worktree opens and switches, then submit resumes from that branch, which no longer trips this guard.
+   - `Cancel`: stop here.
+
+   > Submitting from the default branch `<name>` bypasses review.
 
 ## 2. Resolve platform and target
 
