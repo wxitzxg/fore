@@ -18,7 +18,7 @@ These never move, no matter what arguments the user passes:
 - Never force push, and no flag enables it.
 - Target `origin` only. A request naming `upstream` or any other remote is refused, and the base branch must be a branch inside `origin`.
 - The request closes exactly the issues the user picks in the gate, and nothing else.
-- One request per branch. If an open request already exists, return its link.
+- One request per branch. If a request already exists, open, merged, or closed, return its link and stop.
 
 ## 1. Guards
 
@@ -114,12 +114,12 @@ Propose one title as the automatic default in the gate:
 
 ## 5. Check for an existing request
 
-Before any network write, check whether the branch already has an open request:
+Before any network write, check whether the branch already has a request, open or closed:
 
 GitHub:
 
 ```bash
-gh api "repos/<owner>/<repo>/pulls?head=<owner>:<branch>&state=open" --jq 'if length > 0 then .[0].html_url else empty end'
+gh api "repos/<owner>/<repo>/pulls?head=<owner>:<branch>&state=all&per_page=1&sort=updated&direction=desc" --jq 'if length > 0 then .[0] | {url: .html_url, state, merged} else empty end'
 ```
 
 An empty output means none exists. Do not treat a `null` line from `.[0]` on an empty array as a found request.
@@ -127,10 +127,10 @@ An empty output means none exists. Do not treat a `null` line from `.[0]` on an 
 GitLab:
 
 ```bash
-glab mr list --source-branch "<branch>" -F json
+glab mr list --source-branch "<branch>" --state all -F json
 ```
 
-If one exists, print its URL and stop. Nothing is pushed and nothing is duplicated.
+If a request exists, print its URL, say whether it is open, merged, or closed, and stop. A merged branch has nothing left to submit, and an open or closed request already exists, so nothing is pushed or duplicated in any case.
 
 ## 6. Generate the body
 
