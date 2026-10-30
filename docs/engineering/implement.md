@@ -24,7 +24,7 @@ The same-session case is worth naming because the skill's own first line doesn't
 
 ## Prerequisites
 
-`implement` commits to the branch you are on. It does not create one, and it does not ask. Check you are on the branch you want the work on before you start.
+`implement` commits to a feature branch, never the default branch. If you start on `main` (or `master`), it asks up front and branches off it first, with a name you can auto-accept or type yourself. On any other branch it works there without asking, so check the branch you are on is the one you want the work on.
 
 If the tickets came from [to-tickets](./to-tickets.md), the tracker they live on was configured by [setup](./setup.md). `code-review` reads the same configuration to find the originating spec at close-out.
 
@@ -77,6 +77,7 @@ Probably the ticket is too big rather than the skill being misused. A run does c
 ## It's working if
 
 - The session opens by reading the ticket or spec and restating what it will build, rather than asking you what to build.
+- If you started on the default branch, it asked for a branch name before touching any code.
 - You can see an actual `/tdd` invocation in the trace, not just tests appearing in the diff.
 - Typechecks and single test files run repeatedly during the run, and the full suite runs once near the end.
 - The run reaches a commit on your current branch without you prompting it to carry on.
