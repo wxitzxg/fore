@@ -1,5 +1,16 @@
 # fore
 
+## 0.3.0
+
+Ship/defer split and a new worktree skill:
+
+- Add `worktree` skill for opening a named git worktree.
+- Rewrite `submit` as a single-turn gate; fold `pr` into `submit` (remove the standalone `pr` skill).
+- `implement-spec` stops at the branch and defers shipping to `submit`.
+- Fix `submit` PR creation via REST (GraphQL fails under a fine-grained token), and detect merged/closed requests, not only open ones.
+- Fix dirty-tree guard ordering and worktree naming on the default-branch path.
+- Minor body updates to `guide`, `implement`, `grilling` and `triage`.
+
 ## 0.2.0
 
 Synced with upstream [mattpocock/skills](https://github.com/mattpocock/skills) v1.3.1:
