@@ -23,7 +23,7 @@ point appears only when its condition holds:
 | Point | Asked when | Options |
 | --- | --- | --- |
 | Commit | the working tree is dirty | `Commit the changes` (default), `Cancel` |
-| Branch | the current branch is `origin`'s default | `New branch` (default), `Worktree` |
+| Branch | the current branch is `origin`'s default | `Worktree` (default), `New branch` |
 | Title | always | `Auto: <proposal>` (default), `Type my own` |
 | Closes | an issue candidate exists | `Close #<n> <title>` (one per candidate, first is default), `None` |
 | Create | always | `Create` (default), `Cancel` |

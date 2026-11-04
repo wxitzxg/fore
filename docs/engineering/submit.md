@@ -20,7 +20,7 @@ Run it in the same session that just ran implement, before clearing or compactin
 ## Prerequisites
 
 - **A configured tracker.** Submit reads `docs/agents/issue-tracker.md` (written by [setup](./setup.md)) to pick GitHub or GitLab, falling back to the origin hostname. A local markdown tracker or an unidentifiable remote fails fast and points you at setup, because a code host cannot close markdown files under `.scratch/`.
-- **Work on a reviewable branch.** Neither a dirty tree nor the default branch stops submit outright. Both become options in the single gate: a dirty tree gets a `Commit the changes` option, and a default branch gets `New branch` or `Worktree`, so never fix state and rerun; committing straight to the default branch still bypasses review, so the gate moves the work before the commit.
+- **Work on a reviewable branch.** Neither a dirty tree nor the default branch stops submit outright. Both become options in the single gate: a dirty tree gets a `Commit the changes` option, and a default branch gets `Worktree` (preferred) or `New branch`, so never fix state and rerun; committing straight to the default branch still bypasses review, so the gate moves the work before the commit.
 - The platform CLI: `gh` for GitHub, `glab` for GitLab, authenticated against the origin host.
 
 ## How it finds the issues
