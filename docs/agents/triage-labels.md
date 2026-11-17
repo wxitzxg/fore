@@ -14,4 +14,6 @@ When a skill mentions a role (e.g. "apply the AFK-ready triage label"), use the 
 
 The `spec` label is separate from triage roles: it marks a spec issue published by `/to-spec`, the container the tickets from `/to-tickets` hang under. Only spec issues carry it; task tickets never do.
 
+Judge every issue against [`SCOPE.md`](../../SCOPE.md) before picking a state. Rejections close as "not planned".
+
 Edit the right-hand column to match whatever vocabulary you actually use.
