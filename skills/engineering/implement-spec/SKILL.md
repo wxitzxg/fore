@@ -12,6 +12,8 @@ The goal is the entire spec implemented on a single **integration branch**, ever
 
 The tickets are not a list of steps. They are a **task graph** with blocking relationships between them. The **frontier** is the set of tickets whose blockers have all merged into the integration branch; only these are ready to be grabbed. A blocked ticket stays ungrabbed until that merge lands, so its worktree always branches off an integration branch that already contains its blockers.
 
+Start every subagent with a fresh context window.
+
 Communication to and from subagents should be sparse. Communicate primarily through **context pointers**: to the spec, tickets, research notes, and previous commits. Don't duplicate information already available via pointers.
 
 **Implementer subagents** should be run in the background where possible for maximum concurrency.
